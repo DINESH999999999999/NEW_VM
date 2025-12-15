@@ -1,0 +1,54 @@
+DEFINE JOB NATION_HISTORY_TPT_JOB
+    DESCRIPTION 'This job will load data in my empty table'
+    (
+    DEFINE SCHEMA NATION_HISTORY_SCH
+    (N_NATIONKEY BIGINT
+,N_NAME VARCHAR(64000)
+,N_REGIONKEY BIGINT
+,N_COMMENT VARCHAR(64000)
+,COUNTRY_CODE VARCHAR(64000)
+,START_TIME TIMESTAMP(6)
+,END_TIME TIMESTAMP(6)
+,CURRENT_FLAG BIGINT
+); 
+    DEFINE OPERATOR DATACONNN
+    DESCRIPTION 'TPT DataConnector CONSUMER Operator'
+    TYPE DATACONNECTOR CONSUMER
+    SCHEMA NATION_HISTORY_SCH
+    ATTRIBUTES
+    (
+    VARCHAR DIRECTORYPath = '/media/ssd/python',
+	VARCHAR FileName = 'NATION_HISTORY_export.CSV',
+    VARCHAR FileSuffix = '.csv',
+    VARCHAR OpenMode = 'Write',
+    VARCHAR Format = 'Delimited',
+    VARCHAR TextDelimiter = ',',
+    VARCHAR QuotedData = 'Yes',
+    INTEGER FileSize = 52428800
+    );
+
+
+
+DEFINE OPERATOR EXPORT_OPERATORR
+  DESCRIPTION 'TPT export Operator'
+  TYPE EXPORT
+  SCHEMA NATION_HISTORY_SCH
+  ATTRIBUTES
+  (
+    VARCHAR TdpId              = 'dev-test12-cp5b3xu7q95ova8u.env.clearscape.teradata.com',
+    VARCHAR UserName           = 'demo_user',
+    VARCHAR UserPassword       = 'Ranjith@db',
+	INTEGER MinSessions = 1,
+	INTEGER MaxSessions = 16,
+    VARCHAR Selectstmt        = 'SELECT * FROM DEMO_USER.NATION_HISTORY;',
+    VARCHAR LogTable           = 'DEMO_USER.LOG_NATION_HISTORY',
+    VARCHAR ErrorTable1 = 'DEMO_USER.ET1_NATION_HISTORY',
+    VARCHAR ErrorTable2 = 'DEMO_USER.ET2_NATION_HISTORY'
+
+  );
+  
+  
+
+    APPLY TO OPERATOR (DATACONNN)
+    SELECT * FROM OPERATOR (EXPORT_OPERATORR);
+);

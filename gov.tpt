@@ -1,0 +1,56 @@
+DEFINE JOB GOV_export
+DESCRIPTION 'This job will load data in my empty table'
+(
+
+
+DEFINE SCHEMA SCHEMA_Employee
+(
+    
+PS_PARTKEY VARCHAR(60000),
+PS_SUPPKEY VARCHAR(60000),
+PS_AVAILQTY VARCHAR(60000),
+PS_SUPPLYCOST VARCHAR(60000)
+
+);
+
+DEFINE OPERATOR DATACONNN
+  DESCRIPTION 'TPT DataConnector CONSUMER Operator'
+  TYPE DATACONNECTOR CONSUMER
+  SCHEMA SCHEMA_Employee
+  ATTRIBUTES
+  (
+    VARCHAR DIRECTORYPath = 'C:\Users\manga\Downloads\cog',
+    VARCHAR FileName = 'Madhavafilenamez',
+    VARCHAR OpenMode = 'Write',
+    VARCHAR Format = 'Delimited',
+    VARCHAR TextDelimiter = ',',
+    VARCHAR FileSizeMax = '52428800',
+    VARCHAR QuotedData = 'Yes'
+  );
+
+
+
+DEFINE OPERATOR EXPORT_OPERATORR
+  DESCRIPTION 'TPT export Operator'
+  TYPE EXPORT
+  SCHEMA SCHEMA_Employee
+  ATTRIBUTES
+  (
+    VARCHAR TdpId              = 'dev-qdoalers1wc39506.env.clearscape.teradata.com',
+    VARCHAR UserName           = 'demo_user',
+    VARCHAR UserPassword       = 'Dineshdinesh@9',
+	INTEGER MinSessions = 1,
+	INTEGER MaxSessions = 16,
+    VARCHAR Selectstmt        = 'SELECT * FROM demo_user.IOP;',
+    VARCHAR LogTable           = 'demo_user.LOG_Employeez',
+    VARCHAR ErrorTable1 = 'demo_user.ET1_Employeez',
+    VARCHAR ErrorTable2 = 'demo_user.ET2_Employeez'
+
+  );
+  
+  
+
+    APPLY TO OPERATOR (DATACONNN[2])
+    SELECT * FROM OPERATOR (EXPORT_OPERATORR[2]);
+);
+
