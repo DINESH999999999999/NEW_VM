@@ -508,26 +508,43 @@ def create_target_table(job,file_format_obj_name,act_path):
             df_snowpark.columns
             empty_df = df_snowpark.limit(0)
             empty_df.write.mode(f"{load_mode}").save_as_table(f"{sf_database_name}.{sf_schema_name}.{sf_table_name}")
+            print(session_id)
+            #his=spsession.sql(f"""select QUERY_TEXT,SESSION_ID,ROWS_PRODUCED,ROWS_INSERTED,ERROR_CODE,ERROR_MESSAGE
+            #                    from table(information_schema.query_history_by_session()) where SESSION_ID={session_id} 
+            #                    order by start_time DESC;""")
             
-            his=spsession.sql(f"""select QUERY_TEXT,SESSION_ID,ROWS_PRODUCED,ROWS_INSERTED,ERROR_CODE,ERROR_MESSAGE
-                                from table(information_schema.query_history_by_session()) where SESSION_ID={session_id} 
-                                order by start_time DESC;""")
+            query_stmt = f"""SELECT QUERY_TEXT,SESSION_ID,ROWS_PRODUCED,ROWS_INSERTED,ERROR_CODE,ERROR_MESSAGE
+                                FROM TABLE(DATAMIGRATION.INFORMATION_SCHEMA.QUERY_HISTORY_BY_SESSION())
+                                WHERE START_TIME >= DATEADD('day', -1, CURRENT_TIMESTAMP) AND QUERY_TEXT LIKE 'CREATE  OR  REPLACE    TABLE  {sf_database_name}.{sf_schema_name}.{sf_table_name}(%' AND SESSION_ID = {session_id}
+                                ORDER BY START_TIME DESC;"""
+            print(query_stmt)
+            his=spsession.sql(query_stmt)
+            print(his)
             history=his.collect()
-            print('Query result',history[2][0] ,history[2][-3])
-            create_table_query=history[2][0]
-            tar_cnt = history[2][-3]
-            returncode = 0
+            print(history)
+            print('Query result',history[0][0])
             
+            create_table_query=history[0][0]
+            
+            returncode = history[0][4]
+            if returncode == None:
+                returncode=0
+            print(returncode)
+                
         except Exception as e:
-            his=spsession.sql(f"""select QUERY_TEXT,SESSION_ID,ROWS_PRODUCED,ROWS_INSERTED,ERROR_CODE,ERROR_MESSAGE
-                                from table(information_schema.query_history_by_session()) where SESSION_ID={session_id} 
-                                order by start_time DESC;""")
+            '''query_stmt = f"""SELECT QUERY_TEXT,SESSION_ID,ROWS_PRODUCED,ROWS_INSERTED,ERROR_CODE,ERROR_MESSAGE
+                                FROM TABLE(DATAMIGRATION.INFORMATION_SCHEMA.QUERY_HISTORY_BY_SESSION())
+                                WHERE START_TIME >= DATEADD('day', -1, CURRENT_TIMESTAMP) AND QUERY_TEXT LIKE 'CREATE  OR  REPLACE    TABLE  {sf_database_name}.{sf_schema_name}.{sf_table_name}(%' AND SESSION_ID = {session_id}
+                                ORDER BY START_TIME DESC;"""
+                     
+            his=spsession.sql(query_stmt)
             history=his.collect()
-            print('Query result',history[2][0] ,history[2][-3])
-            create_table_query=history[2][0]
-            tar_cnt = history[2][-3]
+            print(history)
+            print('Query result',history[0][0], history[0][5])
+            create_table_query=history[0][0] + '\n' + str(history[0][5])
             #ingestion_query=ingestion_query
-            tar_cnt=str(e)
+            '''
+            create_table_query=str(e)
             returncode = 1
         
         spsession.close()

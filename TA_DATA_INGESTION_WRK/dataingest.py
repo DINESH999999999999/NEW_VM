@@ -37,8 +37,10 @@ lock = multiprocessing.Lock()
 
 def dataingest(task):
     time.sleep(1)
+    
     rc_sum=0
-    job=task
+    thread_local_data.job=task
+    job = thread_local_data.job
     job_id = job[0]
     batch_id = job[1]
     file_pattern = job[2]
@@ -201,7 +203,7 @@ if __name__ == "__main__":
 
 
     
-    with ProcessPoolExecutor(max_workers=job_parallelism) as executor:
+    with ThreadPoolExecutor(max_workers=job_parallelism) as executor:
         status_code_tpt_scr_gen = {executor.submit(dataingest, task): task for task in configtable}
         for return_code in as_completed(status_code_tpt_scr_gen):
             print(return_code.result(),"Return Code")
