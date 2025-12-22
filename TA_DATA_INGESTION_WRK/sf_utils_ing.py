@@ -374,8 +374,11 @@ def copy_ingestion(job,act_path,file_format_obj_name):
         returncode = 0
         ingestion_cnt = 0
         print(result,returncode,copystmnt)
-        for row in result:
-            ingestion_cnt = ingestion_cnt + row[2]
+        try:
+            for row in result:
+                ingestion_cnt = ingestion_cnt + row[2]
+        except Exception as e:
+            ingestion_cnt = 0
         return [returncode,copystmnt,result,ingestion_cnt]
 
     except Exception as e:
