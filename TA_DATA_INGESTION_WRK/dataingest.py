@@ -124,7 +124,8 @@ if __name__ == "__main__":
     sf_database = cred['sf_database']
     sf_schema = cred['sf_schema']
     job_parallelism = int(cred['job_parallelism'])
-
+    sf_config_table = cred['sf_config_table']
+    sf_log_table = cred['sf_log_table']
     sfcon = snowflake.connector.connect(
         account=sf_host ,
         user=sf_user, 
@@ -179,7 +180,7 @@ if __name__ == "__main__":
     
     print(where_condition)
 
-    query=f"""SELECT JOB_ID, (SELECT COALESCE((SELECT MAX(CAST(BATCH_ID AS INT)) FROM DATAMIGRATION.DEMO_USER.DATA_INGESTION_LOG_TABLE)+1,10000)) AS BATCH_ID, FILE_PATTERN, CONCAT(CLOUD_PATH,{path_ext}), SF_DATABASE_NAME, SF_SCHEMA_NAME, SF_TABLE_NAME, WAREHOUSE_NAME, LOAD_MODE, FILE_TYPE, FIELD_DELIMITER, FIELD_OPTIONALLY_ENCLOSED_BY, ESCAPE_CHARACTER, SKIP_HEADER, ADDITIONAL_FILE_FORMAT_OPTIONS, ADDITIONAL_COPY_INTO_OPTIONS, TABLE_EXISTS FROM DATAMIGRATION.DEMO_USER.DATA_INGESTION_CONFIG_TABLE WHERE{where_condition};"""
+    query=f"""SELECT JOB_ID, (SELECT COALESCE((SELECT MAX(CAST(BATCH_ID AS INT)) FROM {sf_log_table})+1,10000)) AS BATCH_ID, FILE_PATTERN, CONCAT(CLOUD_PATH,{path_ext}), SF_DATABASE_NAME, SF_SCHEMA_NAME, SF_TABLE_NAME, WAREHOUSE_NAME, LOAD_MODE, FILE_TYPE, FIELD_DELIMITER, FIELD_OPTIONALLY_ENCLOSED_BY, ESCAPE_CHARACTER, SKIP_HEADER, ADDITIONAL_FILE_FORMAT_OPTIONS, ADDITIONAL_COPY_INTO_OPTIONS, TABLE_EXISTS FROM {sf_config_table} WHERE{where_condition};"""
     
     print(query)
     spsession=Session.builder.configs(spcon).create()
